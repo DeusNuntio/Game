@@ -11,6 +11,8 @@ import { TurnIndicator } from '@/ui/components/TurnIndicator';
 import { UnitSelectionPanel } from '@/ui/components/UnitSelectionPanel';
 import { ActionMenu } from '@/ui/components/ActionMenu';
 import { ObjectiveTracker } from '@/ui/components/ObjectiveTracker';
+import { UtilityAI } from '@/ai/UtilityAI';
+import { runEnemyTurn } from '@/ai/AiController';
 
 /**
  * Temporary demo scene wiring GameEngine to CanvasRenderer + UI, so every
@@ -130,12 +132,26 @@ type ArmedMode = 'move' | 'attack' | 'openDoor' | 'hack' | null;
 let armedMode: ArmedMode = null;
 let inspectedUnitId: string | undefined;
 
+const enemyAi = new UtilityAI();
+
+/** Drives every enemy unit's turn automatically as soon as it becomes active. */
+function runEnemyTurnsIfNeeded(): void {
+  const MAX_ENEMY_TURNS_IN_A_ROW = 20;
+  for (let i = 0; i < MAX_ENEMY_TURNS_IN_A_ROW; i++) {
+    const activeId = getActiveUnitId(engine.getState());
+    const activeUnit = activeId ? engine.getState().units[activeId] : undefined;
+    if (!activeUnit || activeUnit.faction !== 'enemy') return;
+    runEnemyTurn(engine, enemyAi, activeUnit.id);
+  }
+}
+
 const actionMenu = new ActionMenu(hud, (id) => {
   const state = engine.getState();
   const activeId = getActiveUnitId(state);
   if (id === 'endTurn') {
     if (activeId) engine.dispatch({ type: 'endTurn', unitId: activeId });
     armedMode = null;
+    runEnemyTurnsIfNeeded();
     refresh();
     return;
   }
@@ -171,6 +187,7 @@ inputManager.onAction((action) => {
     const activeId = getActiveUnitId(state);
     if (activeId) engine.dispatch({ type: 'endTurn', unitId: activeId });
     armedMode = null;
+    runEnemyTurnsIfNeeded();
     refresh();
     return;
   }
@@ -207,6 +224,7 @@ inputManager.onAction((action) => {
   } else {
     inspectedUnitId = targetUnit?.id;
   }
+  runEnemyTurnsIfNeeded();
   refresh();
 });
 

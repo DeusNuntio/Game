@@ -76,3 +76,37 @@ export function findPath(
 
   return null;
 }
+
+/**
+ * BFS flood fill of every tile reachable within `maxSteps`, excluding the start
+ * tile. Shared by movement-range UI highlighting (later) and AI behaviors that
+ * need to pick the best reachable tile (flee/approach/seek cover).
+ */
+export function computeReachableTiles(
+  grid: Grid,
+  start: Coord,
+  maxSteps: number,
+  isBlocked: (c: Coord) => boolean,
+): Coord[] {
+  const distance = new Map<string, number>([[coordKey(start), 0]]);
+  const queue: Coord[] = [start];
+  const result: Coord[] = [];
+
+  let head = 0;
+  while (head < queue.length) {
+    const current = queue[head++]!;
+    const dist = distance.get(coordKey(current))!;
+    if (dist >= maxSteps) continue;
+
+    for (const neighbor of neighbors4(grid, current)) {
+      const key = coordKey(neighbor);
+      if (distance.has(key)) continue;
+      if (isBlocked(neighbor)) continue;
+      distance.set(key, dist + 1);
+      result.push(neighbor);
+      queue.push(neighbor);
+    }
+  }
+
+  return result;
+}
