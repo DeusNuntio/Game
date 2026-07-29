@@ -14,6 +14,8 @@ export interface UnitStats {
   critChance: number;
   /** Skill used to resolve console hacks [0,1]. */
   hackSkill: number;
+  /** Placeholder unarmed/base damage; overridden once a weapon is equipped (M9). */
+  baseDamage: number;
 }
 
 export interface StatusEffect {

@@ -6,9 +6,15 @@ export interface MoveAction {
   to: Coord;
 }
 
+export interface AttackAction {
+  type: 'attack';
+  attackerId: string;
+  targetId: string;
+}
+
 /**
  * Discriminated union of every player/AI-issued command. Grows as milestones add
- * systems (endTurn in M3, attack in M2, hack/openDoor in M7, equip in M9, ...).
- * This file is the single source of truth for what GameEngine.dispatch accepts.
+ * systems (endTurn in M3, hack/openDoor in M7, equip in M9, ...). This file is the
+ * single source of truth for what GameEngine.dispatch accepts.
  */
-export type GameAction = MoveAction;
+export type GameAction = MoveAction | AttackAction;

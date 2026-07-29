@@ -31,6 +31,22 @@ export interface ActionRejectedEvent {
   reason: string;
 }
 
+export interface AttackResolvedEvent {
+  type: 'attackResolved';
+  attackerId: string;
+  targetId: string;
+  hit: boolean;
+  crit: boolean;
+  damage: number;
+  hitChance: number;
+  targetHpAfter: number;
+}
+
+export interface UnitDiedEvent {
+  type: 'unitDied';
+  unitId: string;
+}
+
 /**
  * Discriminated union of everything GameEngine can emit. Rendering/audio/UI/save
  * subscribe to these; they never read gameplay internals directly. Grows alongside
@@ -41,4 +57,6 @@ export type GameEvent =
   | TurnStartedEvent
   | TurnEndedEvent
   | RoundStartedEvent
-  | ActionRejectedEvent;
+  | ActionRejectedEvent
+  | AttackResolvedEvent
+  | UnitDiedEvent;

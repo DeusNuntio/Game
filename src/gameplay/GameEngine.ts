@@ -4,6 +4,7 @@ import { cloneGameState } from './model/GameState';
 import type { GameAction } from './actions/GameAction';
 import type { GameEvent } from './actions/GameEvent';
 import { resolveMove } from './systems/movement/MovementSystem';
+import { resolveAttackAction } from './systems/combat/AttackResolver';
 
 /**
  * The single mutation point for GameState. Every consumer (UI, AI, tests) calls
@@ -37,7 +38,11 @@ function applyAction(state: GameState, action: GameAction): { state: GameState; 
   switch (action.type) {
     case 'move':
       return resolveMove(state, action);
-    default:
-      throw new Error(`Unhandled action type: ${JSON.stringify(action)}`);
+    case 'attack':
+      return resolveAttackAction(state, action);
+    default: {
+      const exhaustive: never = action;
+      throw new Error(`Unhandled action type: ${JSON.stringify(exhaustive)}`);
+    }
   }
 }
