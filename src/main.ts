@@ -2,7 +2,7 @@ import type { GameState } from '@/gameplay/model/GameState';
 import { getActiveUnitId } from '@/gameplay/model/GameState';
 import { GameEngine } from '@/gameplay/GameEngine';
 import { CanvasRenderer } from '@/rendering/CanvasRenderer';
-import { createCamera } from '@/rendering/Camera';
+import { createIsoCamera } from '@/rendering/Camera';
 import { InputManager } from '@/input/InputManager';
 import { KeyboardMouseBackend } from '@/input/backends/KeyboardMouseBackend';
 import { TurnIndicator } from '@/ui/components/TurnIndicator';
@@ -119,10 +119,12 @@ function startMission(initialState: GameState): void {
   gameRoot.style.display = 'block';
   gameRoot.innerHTML = '';
 
+  const camera = createIsoCamera(initialState.grid.width, initialState.grid.height);
+
   const canvas = document.createElement('canvas');
   canvas.id = 'game-canvas';
-  canvas.width = initialState.grid.width * 48 + 16;
-  canvas.height = initialState.grid.height * 48 + 16;
+  canvas.width = camera.canvasWidth;
+  canvas.height = camera.canvasHeight;
   canvas.style.border = '1px solid #333';
   gameRoot.appendChild(canvas);
 
@@ -138,7 +140,6 @@ function startMission(initialState: GameState): void {
   hud.id = 'hud';
   gameRoot.appendChild(hud);
 
-  const camera = createCamera();
   const engine = new GameEngine(initialState);
   const renderer = new CanvasRenderer(canvas, camera);
   const inputManager = new InputManager(camera);

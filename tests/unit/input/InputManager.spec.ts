@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { createCamera } from '@/rendering/Camera';
+import { createIsoCamera, gridToScreen } from '@/rendering/Camera';
 import { translateInputEvent } from '@/input/InputManager';
 
 describe('translateInputEvent', () => {
-  const camera = createCamera(48, 8, 8);
+  const camera = createIsoCamera(8, 6);
 
-  it('maps a pointerDown to a grid-space pointerSelect action', () => {
-    const action = translateInputEvent({ type: 'pointerDown', screenX: 8 + 48 * 2 + 5, screenY: 8 + 5 }, camera);
-    expect(action).toEqual({ type: 'pointerSelect', coord: { x: 2, y: 0 } });
+  it('maps a pointerDown to a grid-space pointerSelect action (round-trips through gridToScreen)', () => {
+    const target = { x: 3, y: 2 };
+    const screen = gridToScreen(camera, target);
+    const action = translateInputEvent({ type: 'pointerDown', screenX: screen.x, screenY: screen.y }, camera);
+    expect(action).toEqual({ type: 'pointerSelect', coord: target });
   });
 
   it('maps known keys to abstract actions', () => {

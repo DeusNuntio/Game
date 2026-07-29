@@ -64,8 +64,14 @@ restore it once there's a real union again.
 
 - Vitest runs with `environment: 'node'` — gameplay/ai/save code must never
   touch `window`/DOM/Canvas, which is exactly what the import boundary above
-  guarantees. `rendering/`, `input/backends/*`, and UI screens are therefore
-  *not* unit tested here; they're covered by the Playwright e2e test instead.
+  guarantees. Most of `rendering/`, `input/backends/*`, and UI screens are
+  therefore *not* unit tested here; they're covered by the Playwright e2e test
+  instead. The one exception: `rendering/Camera.ts` is pure isometric
+  projection math with zero DOM dependency (`gridToScreen`/`screenToGrid`/
+  `isoDepth`/`tokenCenter`), so it's fully unit tested
+  (`tests/unit/rendering/Camera.spec.ts` round-trips every tile of a grid
+  through the forward+inverse transform) — don't move real DOM/Canvas code
+  into that file expecting it to stay testable this way.
 - **Deterministic combat/hack tests**: `Rng` is a seeded mulberry32 PRNG.
   Tests pin `state.rngState` to a specific seed to get an exact, reproducible
   roll sequence. To find a seed that produces a desired outcome (e.g.
