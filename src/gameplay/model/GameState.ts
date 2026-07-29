@@ -2,6 +2,7 @@ import type { Grid } from './Grid';
 import { cloneGrid } from './Grid';
 import type { Unit } from './Unit';
 import { cloneUnit } from './Unit';
+import type { Mission } from './Mission';
 
 export interface TurnState {
   round: number;
@@ -30,6 +31,8 @@ export interface GameState {
   doors?: Record<string, DoorState>;
   /** Keyed by Tile.consoleId. Populated by mission setup, mutated by the InteractionSystem. */
   consoles?: Record<string, ConsoleState>;
+  /** Absent for ad-hoc/test states; present for any state built from mission data. */
+  mission?: Mission;
 }
 
 function cloneRecord<T>(record: Record<string, T> | undefined): Record<string, T> | undefined {
@@ -49,6 +52,9 @@ export function cloneGameState(state: GameState): GameState {
     rngState: state.rngState,
     doors: cloneRecord(state.doors),
     consoles: cloneRecord(state.consoles),
+    mission: state.mission
+      ? { ...state.mission, objectives: state.mission.objectives.map((o) => ({ ...o })) }
+      : undefined,
   };
 }
 

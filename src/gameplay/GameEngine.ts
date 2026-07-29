@@ -11,12 +11,15 @@ import { resolveOpenDoor } from './systems/interactables/Door';
 import { resolveHack } from './systems/interactables/Console';
 import { resolveEquip } from './systems/inventory/EquipmentSystem';
 import { resolvePickupItem } from './systems/loot/LootSystem';
+import { evaluateObjectives } from './systems/mission/ObjectiveTracker';
+import { evaluateMissionOutcome } from './systems/mission/WinLoseEvaluator';
 
 /**
  * The single mutation point for GameState. Every consumer (UI, AI, tests) calls
  * dispatch(); nothing else is allowed to touch state directly. Internally this
  * works on a fresh clone so a failed/rejected action never corrupts the live state,
- * and routes to the system responsible for that action type.
+ * and routes to the system responsible for that action type. After the action
+ * resolves, mission objectives/win-lose are re-evaluated if a mission is active.
  */
 export class GameEngine {
   private state: GameState;
@@ -34,6 +37,7 @@ export class GameEngine {
   dispatch(action: GameAction): GameEvent[] {
     const working = cloneGameState(this.state);
     const { state: nextState, events } = applyAction(working, action);
+    events.push(...evaluateMission(nextState));
     this.state = nextState;
     this.events.emitAll(events);
     return events;
@@ -76,4 +80,28 @@ function applyAction(state: GameState, action: GameAction): { state: GameState; 
       throw new Error(`Unhandled action type: ${JSON.stringify(exhaustive)}`);
     }
   }
+}
+
+/** Mutates state.mission in place (objective completion + status) and returns any newly-fired mission events. */
+function evaluateMission(state: GameState): GameEvent[] {
+  if (!state.mission || state.mission.status !== 'ongoing') return [];
+
+  const events: GameEvent[] = [];
+  const previouslyComplete = new Set(state.mission.objectives.filter((o) => o.complete).map((o) => o.id));
+  const nextObjectives = evaluateObjectives(state);
+  state.mission.objectives = nextObjectives;
+
+  for (const objective of nextObjectives) {
+    if (objective.complete && !previouslyComplete.has(objective.id)) {
+      events.push({ type: 'objectiveCompleted', objectiveId: objective.id });
+    }
+  }
+
+  const outcome = evaluateMissionOutcome(state);
+  if (outcome !== 'ongoing') {
+    state.mission.status = outcome;
+    events.push(outcome === 'won' ? { type: 'missionWon' } : { type: 'missionLost' });
+  }
+
+  return events;
 }

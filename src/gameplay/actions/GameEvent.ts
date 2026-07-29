@@ -97,6 +97,19 @@ export interface LevelUpEvent {
   newLevel: number;
 }
 
+export interface ObjectiveCompletedEvent {
+  type: 'objectiveCompleted';
+  objectiveId: string;
+}
+
+export interface MissionWonEvent {
+  type: 'missionWon';
+}
+
+export interface MissionLostEvent {
+  type: 'missionLost';
+}
+
 /**
  * Discriminated union of everything GameEngine can emit. Rendering/audio/UI/save
  * subscribe to these; they never read gameplay internals directly. Grows alongside
@@ -117,4 +130,7 @@ export type GameEvent =
   | ItemPickedUpEvent
   | LootDroppedEvent
   | XpGainedEvent
-  | LevelUpEvent;
+  | LevelUpEvent
+  | ObjectiveCompletedEvent
+  | MissionWonEvent
+  | MissionLostEvent;
