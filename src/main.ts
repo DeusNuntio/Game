@@ -7,10 +7,14 @@ import { CanvasRenderer } from '@/rendering/CanvasRenderer';
 import { createCamera } from '@/rendering/Camera';
 import { InputManager } from '@/input/InputManager';
 import { KeyboardMouseBackend } from '@/input/backends/KeyboardMouseBackend';
+import { TurnIndicator } from '@/ui/components/TurnIndicator';
+import { UnitSelectionPanel } from '@/ui/components/UnitSelectionPanel';
+import { ActionMenu } from '@/ui/components/ActionMenu';
+import { ObjectiveTracker } from '@/ui/components/ObjectiveTracker';
 
 /**
- * Temporary demo scene wiring GameEngine to CanvasRenderer, so the rendering
- * layer has something real to draw. Replaced by the MainMenu -> MissionSelect
+ * Temporary demo scene wiring GameEngine to CanvasRenderer + UI, so every
+ * layer has something real to drive. Replaced by the MainMenu -> MissionSelect
  * -> mission01 flow once those exist (M13/M11).
  */
 function buildDemoState(): GameState {
@@ -92,10 +96,9 @@ canvas.height = 6 * 48 + 16;
 canvas.style.border = '1px solid #333';
 app.appendChild(canvas);
 
-const hint = document.createElement('p');
-hint.textContent =
-  'Klick: eigene Einheit auswählen/bewegen, Gegner angreifen bei Sichtlinie. Taste N/Leertaste: Zug beenden.';
-app.appendChild(hint);
+const hud = document.createElement('div');
+hud.id = 'hud';
+app.appendChild(hud);
 
 const camera = createCamera();
 const engine = new GameEngine(buildDemoState());
@@ -103,10 +106,44 @@ const renderer = new CanvasRenderer(canvas, camera);
 const inputManager = new InputManager(camera);
 inputManager.addBackend(new KeyboardMouseBackend(canvas));
 
-let selectedUnitId: string | undefined;
+const turnIndicator = new TurnIndicator(hud);
+const unitSelectionPanel = new UnitSelectionPanel(hud);
+const objectiveTracker = new ObjectiveTracker(hud);
 
-function redraw(): void {
-  renderer.render(engine.getState(), { selectedUnitId });
+type ArmedMode = 'move' | 'attack' | null;
+let armedMode: ArmedMode = null;
+let inspectedUnitId: string | undefined;
+
+const actionMenu = new ActionMenu(hud, (id) => {
+  const state = engine.getState();
+  const activeId = getActiveUnitId(state);
+  if (id === 'endTurn') {
+    if (activeId) engine.dispatch({ type: 'endTurn', unitId: activeId });
+    armedMode = null;
+    refresh();
+    return;
+  }
+  armedMode = armedMode === id ? null : (id as ArmedMode);
+  refresh();
+});
+
+function refresh(): void {
+  const state = engine.getState();
+  const activeId = getActiveUnitId(state);
+  const activeUnit = activeId ? state.units[activeId] : undefined;
+
+  renderer.render(state, { selectedUnitId: inspectedUnitId ?? activeId });
+  turnIndicator.update(state);
+  unitSelectionPanel.update(inspectedUnitId ? state.units[inspectedUnitId] : activeUnit);
+  objectiveTracker.update([]);
+
+  const canAct = !!activeUnit && activeUnit.faction === 'player' && activeUnit.stats.ap >= 1;
+  actionMenu.setOptions([
+    { id: 'move', label: 'Bewegen', enabled: canAct },
+    { id: 'attack', label: 'Angreifen', enabled: canAct },
+    { id: 'endTurn', label: 'Zug beenden', enabled: !!activeUnit },
+  ]);
+  actionMenu.setActive(armedMode);
 }
 
 inputManager.onAction((action) => {
@@ -115,14 +152,15 @@ inputManager.onAction((action) => {
   if (action.type === 'endTurn') {
     const activeId = getActiveUnitId(state);
     if (activeId) engine.dispatch({ type: 'endTurn', unitId: activeId });
-    selectedUnitId = undefined;
-    redraw();
+    armedMode = null;
+    refresh();
     return;
   }
 
   if (action.type === 'cancel') {
-    selectedUnitId = undefined;
-    redraw();
+    armedMode = null;
+    inspectedUnitId = undefined;
+    refresh();
     return;
   }
 
@@ -133,22 +171,16 @@ inputManager.onAction((action) => {
     (u) => u.alive && u.coord.x === action.coord.x && u.coord.y === action.coord.y,
   );
 
-  if (!selectedUnitId) {
-    if (targetUnit && targetUnit.id === activeId && targetUnit.faction === 'player') {
-      selectedUnitId = targetUnit.id;
-    }
-    redraw();
-    return;
+  if (armedMode === 'move' && activeId) {
+    engine.dispatch({ type: 'move', unitId: activeId, to: action.coord });
+    armedMode = null;
+  } else if (armedMode === 'attack' && activeId && targetUnit) {
+    engine.dispatch({ type: 'attack', attackerId: activeId, targetId: targetUnit.id });
+    armedMode = null;
+  } else {
+    inspectedUnitId = targetUnit?.id;
   }
-
-  if (targetUnit && targetUnit.faction !== state.units[selectedUnitId]?.faction) {
-    engine.dispatch({ type: 'attack', attackerId: selectedUnitId, targetId: targetUnit.id });
-  } else if (!targetUnit) {
-    engine.dispatch({ type: 'move', unitId: selectedUnitId, to: action.coord });
-  } else if (targetUnit.id === selectedUnitId) {
-    selectedUnitId = undefined;
-  }
-  redraw();
+  refresh();
 });
 
-redraw();
+refresh();
