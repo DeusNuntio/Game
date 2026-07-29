@@ -12,6 +12,11 @@ import { UtilityAI } from '@/ai/UtilityAI';
 import { runEnemyTurn } from '@/ai/AiController';
 import { getItemDef } from '@/data/items';
 import { createMission01 } from '@/data/missions/mission01';
+import { SaveManager } from '@/save/SaveManager';
+import { LocalStorageAdapter } from '@/save/LocalStorageAdapter';
+import { wireAutosave, AUTOSAVE_SLOT } from '@/save/Autosave';
+
+const MANUAL_SAVE_SLOT = 'manual';
 
 const app = document.getElementById('app');
 if (!app) {
@@ -46,6 +51,9 @@ const engine = new GameEngine(createMission01());
 const renderer = new CanvasRenderer(canvas, camera);
 const inputManager = new InputManager(camera);
 inputManager.addBackend(new KeyboardMouseBackend(canvas));
+
+const saveManager = new SaveManager(new LocalStorageAdapter());
+wireAutosave(engine, saveManager, AUTOSAVE_SLOT);
 
 const turnIndicator = new TurnIndicator(hud);
 const unitSelectionPanel = new UnitSelectionPanel(hud);
@@ -97,6 +105,21 @@ const actionMenu = new ActionMenu(hud, (id) => {
     refresh();
     return;
   }
+  if (id === 'save') {
+    saveManager.save(MANUAL_SAVE_SLOT, engine.getState());
+    refresh();
+    return;
+  }
+  if (id === 'load') {
+    const loaded = saveManager.load(MANUAL_SAVE_SLOT);
+    if (loaded) {
+      engine.loadState(loaded);
+      armedMode = null;
+      inspectedUnitId = undefined;
+    }
+    refresh();
+    return;
+  }
   armedMode = armedMode === id ? null : (id as ArmedMode);
   refresh();
 });
@@ -139,6 +162,8 @@ function refresh(): void {
     { id: 'pickupItem', label: 'Aufheben', enabled: isPlayerTurn && hasLoot },
     { id: 'equip', label: 'Ausrüsten', enabled: isPlayerTurn && hasEquippableItem },
     { id: 'endTurn', label: 'Zug beenden', enabled: !missionOver && !!activeUnit },
+    { id: 'save', label: 'Speichern', enabled: true },
+    { id: 'load', label: 'Laden', enabled: saveManager.hasSave(MANUAL_SAVE_SLOT) },
   ]);
   actionMenu.setActive(armedMode);
 }

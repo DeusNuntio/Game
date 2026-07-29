@@ -34,6 +34,15 @@ export class GameEngine {
     return this.state;
   }
 
+  /**
+   * Replaces the live state wholesale (loading a save). Distinct from dispatch()
+   * on purpose: this is an infrastructure operation, not a gameplay action, and
+   * must never run through action validation/turn-ownership/mission evaluation.
+   */
+  loadState(state: GameState): void {
+    this.state = cloneGameState(state);
+  }
+
   dispatch(action: GameAction): GameEvent[] {
     const working = cloneGameState(this.state);
     const { state: nextState, events } = applyAction(working, action);
