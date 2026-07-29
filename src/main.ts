@@ -20,7 +20,9 @@ import { NoopAudioManager } from '@/audio/AudioManager';
 import { MainMenu } from '@/ui/screens/MainMenu';
 import { MissionSelect, type MissionListing } from '@/ui/screens/MissionSelect';
 import { OptionsScreen } from '@/ui/screens/OptionsScreen';
+import { MetaMapScreenStub } from '@/ui/screens/MetaMapScreenStub';
 import type { Screen } from '@/ui/screens/Screen';
+import { createInitialMetaState } from '@/meta/MetaState';
 
 const MANUAL_SAVE_SLOT = 'manual';
 
@@ -52,6 +54,7 @@ app.appendChild(gameRoot);
 
 const saveManager = new SaveManager(new LocalStorageAdapter());
 const audio = new NoopAudioManager();
+const metaState = createInitialMetaState();
 
 let currentScreen: Screen | null = null;
 
@@ -73,8 +76,21 @@ function showMainMenu(): void {
         if (loaded) startMission(loaded);
       },
       onOptions: showOptions,
+      onWorldMap: showWorldMap,
       hasSave: saveManager.hasSave(MANUAL_SAVE_SLOT) || saveManager.hasSave(AUTOSAVE_SLOT),
     }),
+  );
+}
+
+function showWorldMap(): void {
+  showScreen(
+    new MetaMapScreenStub(
+      metaState,
+      (missionId) => {
+        if (missionId === 'mission01') startMission(createMission01());
+      },
+      showMainMenu,
+    ),
   );
 }
 

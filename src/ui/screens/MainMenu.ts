@@ -5,6 +5,7 @@ export interface MainMenuHandlers {
   onNewGame: () => void;
   onContinue: () => void;
   onOptions: () => void;
+  onWorldMap: () => void;
   hasSave: boolean;
 }
 
@@ -28,11 +29,12 @@ export class MainMenu implements Screen {
     const newGame = makeButton('Neues Spiel', this.handlers.onNewGame);
     const cont = makeButton('Fortsetzen', this.handlers.onContinue);
     cont.disabled = !this.handlers.hasSave;
+    const worldMap = makeButton('Weltkarte', this.handlers.onWorldMap);
     const options = makeButton('Optionen', this.handlers.onOptions);
 
     const nav = document.createElement('div');
     nav.className = 'action-menu';
-    nav.append(newGame, cont, options);
+    nav.append(newGame, cont, worldMap, options);
     this.el.appendChild(nav);
 
     container.appendChild(this.el);
