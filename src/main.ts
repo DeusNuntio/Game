@@ -1,8 +1,12 @@
 import { createGrid, setTile } from '@/gameplay/model/Grid';
 import { createUnit } from '@/gameplay/model/Unit';
 import type { GameState } from '@/gameplay/model/GameState';
+import { getActiveUnitId } from '@/gameplay/model/GameState';
 import { GameEngine } from '@/gameplay/GameEngine';
 import { CanvasRenderer } from '@/rendering/CanvasRenderer';
+import { createCamera } from '@/rendering/Camera';
+import { InputManager } from '@/input/InputManager';
+import { KeyboardMouseBackend } from '@/input/backends/KeyboardMouseBackend';
 
 /**
  * Temporary demo scene wiring GameEngine to CanvasRenderer, so the rendering
@@ -88,6 +92,63 @@ canvas.height = 6 * 48 + 16;
 canvas.style.border = '1px solid #333';
 app.appendChild(canvas);
 
+const hint = document.createElement('p');
+hint.textContent =
+  'Klick: eigene Einheit auswählen/bewegen, Gegner angreifen bei Sichtlinie. Taste N/Leertaste: Zug beenden.';
+app.appendChild(hint);
+
+const camera = createCamera();
 const engine = new GameEngine(buildDemoState());
-const renderer = new CanvasRenderer(canvas);
-renderer.render(engine.getState());
+const renderer = new CanvasRenderer(canvas, camera);
+const inputManager = new InputManager(camera);
+inputManager.addBackend(new KeyboardMouseBackend(canvas));
+
+let selectedUnitId: string | undefined;
+
+function redraw(): void {
+  renderer.render(engine.getState(), { selectedUnitId });
+}
+
+inputManager.onAction((action) => {
+  const state = engine.getState();
+
+  if (action.type === 'endTurn') {
+    const activeId = getActiveUnitId(state);
+    if (activeId) engine.dispatch({ type: 'endTurn', unitId: activeId });
+    selectedUnitId = undefined;
+    redraw();
+    return;
+  }
+
+  if (action.type === 'cancel') {
+    selectedUnitId = undefined;
+    redraw();
+    return;
+  }
+
+  if (action.type !== 'pointerSelect') return;
+
+  const activeId = getActiveUnitId(state);
+  const targetUnit = Object.values(state.units).find(
+    (u) => u.alive && u.coord.x === action.coord.x && u.coord.y === action.coord.y,
+  );
+
+  if (!selectedUnitId) {
+    if (targetUnit && targetUnit.id === activeId && targetUnit.faction === 'player') {
+      selectedUnitId = targetUnit.id;
+    }
+    redraw();
+    return;
+  }
+
+  if (targetUnit && targetUnit.faction !== state.units[selectedUnitId]?.faction) {
+    engine.dispatch({ type: 'attack', attackerId: selectedUnitId, targetId: targetUnit.id });
+  } else if (!targetUnit) {
+    engine.dispatch({ type: 'move', unitId: selectedUnitId, to: action.coord });
+  } else if (targetUnit.id === selectedUnitId) {
+    selectedUnitId = undefined;
+  }
+  redraw();
+});
+
+redraw();
