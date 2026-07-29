@@ -14,6 +14,9 @@ import { getCoverLevel } from './Cover';
 import { isFlanking } from './Flanking';
 import { calculateHitChance } from './HitChance';
 import { dropLoot } from '../loot/LootSystem';
+import { applyXpGain } from '../../model/Progression';
+
+const XP_PER_KILL = 10;
 
 export interface AttackResult {
   hit: boolean;
@@ -117,6 +120,13 @@ export function resolveAttackAction(state: GameState, action: AttackAction): Sys
     events.push(diedEvent);
     const lootEvent = dropLoot(state, target);
     if (lootEvent) events.push(lootEvent);
+
+    events.push({ type: 'xpGained', unitId: attacker.id, amount: XP_PER_KILL });
+    const levelBefore = attacker.level;
+    const levelUpResult = applyXpGain(attacker, XP_PER_KILL);
+    for (let gained = 1; gained <= levelUpResult.levelsGained; gained++) {
+      events.push({ type: 'levelUp', unitId: attacker.id, newLevel: levelBefore + gained });
+    }
   }
 
   return { state, events };

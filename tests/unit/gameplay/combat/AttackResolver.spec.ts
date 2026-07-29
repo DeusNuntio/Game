@@ -70,6 +70,25 @@ describe('resolveAttackAction', () => {
     expect(tile?.occupantId).toBeNull();
   });
 
+  it('grants the attacker XP on a kill, leveling up if the threshold is crossed', () => {
+    const state = makeTestState({
+      units: [
+        { id: 'p1', faction: 'player', x: 0, y: 0, stats: { hp: 10 } },
+        { id: 'e1', faction: 'enemy', x: 1, y: 0, stats: { hp: 1 } },
+      ],
+    });
+    state.rngState = 66; // guaranteed hit+crit
+    const engine = new GameEngine(state);
+
+    const events = engine.dispatch({ type: 'attack', attackerId: 'p1', targetId: 'e1' });
+
+    expect(events).toContainEqual({ type: 'xpGained', unitId: 'p1', amount: 10 });
+    expect(events).toContainEqual({ type: 'levelUp', unitId: 'p1', newLevel: 2 });
+    const attacker = engine.getState().units.p1!;
+    expect(attacker.level).toBe(2);
+    expect(attacker.stats.maxAp).toBe(3); // default maxAp 2 + 1 from the level-up unlock
+  });
+
   it('rejects an attack when there is no line of sight', () => {
     const state = makeTestState({
       units: [

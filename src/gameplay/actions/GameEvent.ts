@@ -85,6 +85,18 @@ export interface LootDroppedEvent {
   itemIds: string[];
 }
 
+export interface XpGainedEvent {
+  type: 'xpGained';
+  unitId: string;
+  amount: number;
+}
+
+export interface LevelUpEvent {
+  type: 'levelUp';
+  unitId: string;
+  newLevel: number;
+}
+
 /**
  * Discriminated union of everything GameEngine can emit. Rendering/audio/UI/save
  * subscribe to these; they never read gameplay internals directly. Grows alongside
@@ -103,4 +115,6 @@ export type GameEvent =
   | ConsoleHackFailedEvent
   | ItemEquippedEvent
   | ItemPickedUpEvent
-  | LootDroppedEvent;
+  | LootDroppedEvent
+  | XpGainedEvent
+  | LevelUpEvent;
