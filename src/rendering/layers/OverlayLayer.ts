@@ -1,5 +1,6 @@
 import type { Unit } from '@/gameplay/model/Unit';
 import type { Grid, Tile } from '@/gameplay/model/Grid';
+import type { GameState } from '@/gameplay/model/GameState';
 import { gridToScreen, type Camera } from '../Camera';
 import { COVER_COLORS } from '../AssetPlaceholders';
 
@@ -46,14 +47,26 @@ function drawCoverIcons(ctx: CanvasRenderingContext2D, camera: Camera, tile: Til
   );
 }
 
+function drawConsoleIcon(ctx: CanvasRenderingContext2D, camera: Camera, tile: Tile, state: GameState): void {
+  if (!tile.consoleId) return;
+  const { x, y } = gridToScreen(camera, tile.coord);
+  const size = camera.tileSize;
+  const hacked = state.consoles?.[tile.consoleId]?.hacked ?? false;
+  ctx.fillStyle = hacked ? '#3ddc84' : '#c800ff';
+  const iconSize = size * 0.22;
+  ctx.fillRect(x + size - iconSize - 4, y + 4, iconSize, iconSize);
+}
+
 export function drawOverlayLayer(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
   grid: Grid,
   units: Record<string, Unit>,
+  state: GameState,
 ): void {
   for (const tile of grid.tiles) {
     drawCoverIcons(ctx, camera, tile);
+    drawConsoleIcon(ctx, camera, tile, state);
   }
 
   for (const unit of Object.values(units)) {

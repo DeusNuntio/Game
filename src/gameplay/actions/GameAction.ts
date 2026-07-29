@@ -17,12 +17,24 @@ export interface EndTurnAction {
   unitId: string;
 }
 
+export interface OpenDoorAction {
+  type: 'openDoor';
+  unitId: string;
+  doorId: string;
+}
+
+export interface HackAction {
+  type: 'hack';
+  unitId: string;
+  consoleId: string;
+}
+
 /**
  * Discriminated union of every player/AI-issued command. Grows as milestones add
- * systems (hack/openDoor in M7, equip in M9, ...). This file is the single source
- * of truth for what GameEngine.dispatch accepts.
+ * systems (equip in M9, ...). This file is the single source of truth for what
+ * GameEngine.dispatch accepts.
  */
-export type GameAction = MoveAction | AttackAction | EndTurnAction;
+export type GameAction = MoveAction | AttackAction | EndTurnAction | OpenDoorAction | HackAction;
 
 /** Extracts the id of the unit performing this action, for turn-ownership checks. */
 export function actingUnitId(action: GameAction): string {
@@ -32,6 +44,10 @@ export function actingUnitId(action: GameAction): string {
     case 'attack':
       return action.attackerId;
     case 'endTurn':
+      return action.unitId;
+    case 'openDoor':
+      return action.unitId;
+    case 'hack':
       return action.unitId;
   }
 }

@@ -10,9 +10,14 @@ export interface TurnState {
   activeIndex: number;
 }
 
-/** Minimal door-state placeholder; replaced by the full DoorState shape in M7. */
-export interface DoorStateStub {
+export interface DoorState {
   open: boolean;
+}
+
+export interface ConsoleState {
+  hacked: boolean;
+  /** [0,1]; higher is harder. Offsets the hacking unit's hackSkill in the skill check. */
+  difficulty: number;
 }
 
 export interface GameState {
@@ -21,8 +26,15 @@ export interface GameState {
   turn: TurnState;
   /** Seed/state for the deterministic Rng; advanced by any system that rolls dice. */
   rngState: number;
-  /** Keyed by Tile.doorId. Populated by mission setup, mutated by M7 InteractionSystem. */
-  doors?: Record<string, DoorStateStub>;
+  /** Keyed by Tile.doorId. Populated by mission setup, mutated by the InteractionSystem. */
+  doors?: Record<string, DoorState>;
+  /** Keyed by Tile.consoleId. Populated by mission setup, mutated by the InteractionSystem. */
+  consoles?: Record<string, ConsoleState>;
+}
+
+function cloneRecord<T>(record: Record<string, T> | undefined): Record<string, T> | undefined {
+  if (!record) return undefined;
+  return Object.fromEntries(Object.entries(record).map(([id, value]) => [id, { ...value }]));
 }
 
 export function cloneGameState(state: GameState): GameState {
@@ -35,9 +47,8 @@ export function cloneGameState(state: GameState): GameState {
     units,
     turn: { ...state.turn, order: [...state.turn.order] },
     rngState: state.rngState,
-    doors: state.doors
-      ? Object.fromEntries(Object.entries(state.doors).map(([id, d]) => [id, { ...d }]))
-      : undefined,
+    doors: cloneRecord(state.doors),
+    consoles: cloneRecord(state.consoles),
   };
 }
 

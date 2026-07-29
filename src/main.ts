@@ -27,6 +27,20 @@ function buildDemoState(): GameState {
   });
   setTile(grid, { coord: { x: 4, y: 1 }, type: 'wall', occupantId: null, cover: {} });
   setTile(grid, { coord: { x: 4, y: 3 }, type: 'wall', occupantId: null, cover: {} });
+  setTile(grid, {
+    coord: { x: 4, y: 2 },
+    type: 'door',
+    occupantId: null,
+    cover: {},
+    doorId: 'd1',
+  });
+  setTile(grid, {
+    coord: { x: 1, y: 4 },
+    type: 'floor',
+    occupantId: null,
+    cover: {},
+    consoleId: 'c1',
+  });
 
   const units: GameState['units'] = {};
   const p1 = createUnit({
@@ -77,6 +91,8 @@ function buildDemoState(): GameState {
     units,
     turn: { round: 1, order: [p1.id, e1.id], activeIndex: 0 },
     rngState: Date.now() & 0xffffffff,
+    doors: { d1: { open: false } },
+    consoles: { c1: { hacked: false, difficulty: 0.4 } },
   };
 }
 
@@ -110,7 +126,7 @@ const turnIndicator = new TurnIndicator(hud);
 const unitSelectionPanel = new UnitSelectionPanel(hud);
 const objectiveTracker = new ObjectiveTracker(hud);
 
-type ArmedMode = 'move' | 'attack' | null;
+type ArmedMode = 'move' | 'attack' | 'openDoor' | 'hack' | null;
 let armedMode: ArmedMode = null;
 let inspectedUnitId: string | undefined;
 
@@ -141,6 +157,8 @@ function refresh(): void {
   actionMenu.setOptions([
     { id: 'move', label: 'Bewegen', enabled: canAct },
     { id: 'attack', label: 'Angreifen', enabled: canAct },
+    { id: 'openDoor', label: 'Tür öffnen', enabled: canAct },
+    { id: 'hack', label: 'Hacken', enabled: canAct },
     { id: 'endTurn', label: 'Zug beenden', enabled: !!activeUnit },
   ]);
   actionMenu.setActive(armedMode);
@@ -170,12 +188,21 @@ inputManager.onAction((action) => {
   const targetUnit = Object.values(state.units).find(
     (u) => u.alive && u.coord.x === action.coord.x && u.coord.y === action.coord.y,
   );
+  const clickedTile = state.grid.tiles.find(
+    (t) => t.coord.x === action.coord.x && t.coord.y === action.coord.y,
+  );
 
   if (armedMode === 'move' && activeId) {
     engine.dispatch({ type: 'move', unitId: activeId, to: action.coord });
     armedMode = null;
   } else if (armedMode === 'attack' && activeId && targetUnit) {
     engine.dispatch({ type: 'attack', attackerId: activeId, targetId: targetUnit.id });
+    armedMode = null;
+  } else if (armedMode === 'openDoor' && activeId && clickedTile?.doorId) {
+    engine.dispatch({ type: 'openDoor', unitId: activeId, doorId: clickedTile.doorId });
+    armedMode = null;
+  } else if (armedMode === 'hack' && activeId && clickedTile?.consoleId) {
+    engine.dispatch({ type: 'hack', unitId: activeId, consoleId: clickedTile.consoleId });
     armedMode = null;
   } else {
     inspectedUnitId = targetUnit?.id;

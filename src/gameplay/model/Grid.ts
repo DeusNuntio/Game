@@ -31,8 +31,10 @@ export interface Tile {
   type: TileType;
   occupantId: string | null;
   cover: CoverMap;
-  /** Set when type === 'door'; links this tile to a DoorState in GameState.doors (see M7). */
+  /** Set when type === 'door'; links this tile to a DoorState in GameState.doors. */
   doorId?: string;
+  /** Set on any walkable tile that holds a hackable console/terminal. */
+  consoleId?: string;
 }
 
 export interface Grid {

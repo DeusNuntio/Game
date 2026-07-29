@@ -29,7 +29,7 @@ export class CanvasRenderer {
     const { ctx, camera } = this;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawGridLayer(ctx, camera, state.grid, state);
-    drawOverlayLayer(ctx, camera, state.grid, state.units);
+    drawOverlayLayer(ctx, camera, state.grid, state.units, state);
     drawUnitLayer(ctx, camera, state.units, view.selectedUnitId);
   }
 }
