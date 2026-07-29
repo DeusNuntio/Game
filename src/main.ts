@@ -13,6 +13,7 @@ import { ActionMenu } from '@/ui/components/ActionMenu';
 import { ObjectiveTracker } from '@/ui/components/ObjectiveTracker';
 import { UtilityAI } from '@/ai/UtilityAI';
 import { runEnemyTurn } from '@/ai/AiController';
+import { getItemDef } from '@/data/items';
 
 /**
  * Temporary demo scene wiring GameEngine to CanvasRenderer + UI, so every
@@ -81,6 +82,8 @@ function buildDemoState(): GameState {
       initiative: 4,
     },
   });
+  e1.equipped.weaponId = 'pistol_mk1';
+  p1.inventory.push('smg_mk1');
   units[p1.id] = p1;
   units[e1.id] = e1;
   for (const unit of Object.values(units)) {
@@ -148,10 +151,27 @@ function runEnemyTurnsIfNeeded(): void {
 const actionMenu = new ActionMenu(hud, (id) => {
   const state = engine.getState();
   const activeId = getActiveUnitId(state);
+  const activeUnit = activeId ? state.units[activeId] : undefined;
+
   if (id === 'endTurn') {
     if (activeId) engine.dispatch({ type: 'endTurn', unitId: activeId });
     armedMode = null;
     runEnemyTurnsIfNeeded();
+    refresh();
+    return;
+  }
+  if (id === 'equip' && activeUnit) {
+    const itemId = activeUnit.inventory.find((i) => getItemDef(i)?.kind !== 'consumable');
+    if (itemId) engine.dispatch({ type: 'equip', unitId: activeUnit.id, itemId });
+    refresh();
+    return;
+  }
+  if (id === 'pickupItem' && activeUnit) {
+    const tile = state.grid.tiles.find(
+      (t) => t.coord.x === activeUnit.coord.x && t.coord.y === activeUnit.coord.y,
+    );
+    const itemId = tile?.groundItemIds?.[0];
+    if (itemId) engine.dispatch({ type: 'pickupItem', unitId: activeUnit.id, itemId });
     refresh();
     return;
   }
@@ -170,11 +190,20 @@ function refresh(): void {
   objectiveTracker.update([]);
 
   const canAct = !!activeUnit && activeUnit.faction === 'player' && activeUnit.stats.ap >= 1;
+  const isPlayerTurn = !!activeUnit && activeUnit.faction === 'player';
+  const standingTile = activeUnit
+    ? state.grid.tiles.find((t) => t.coord.x === activeUnit.coord.x && t.coord.y === activeUnit.coord.y)
+    : undefined;
+  const hasLoot = !!standingTile?.groundItemIds && standingTile.groundItemIds.length > 0;
+  const hasEquippableItem = !!activeUnit?.inventory.some((i) => getItemDef(i)?.kind !== 'consumable');
+
   actionMenu.setOptions([
     { id: 'move', label: 'Bewegen', enabled: canAct },
     { id: 'attack', label: 'Angreifen', enabled: canAct },
     { id: 'openDoor', label: 'Tür öffnen', enabled: canAct },
     { id: 'hack', label: 'Hacken', enabled: canAct },
+    { id: 'pickupItem', label: 'Aufheben', enabled: isPlayerTurn && hasLoot },
+    { id: 'equip', label: 'Ausrüsten', enabled: isPlayerTurn && hasEquippableItem },
     { id: 'endTurn', label: 'Zug beenden', enabled: !!activeUnit },
   ]);
   actionMenu.setActive(armedMode);

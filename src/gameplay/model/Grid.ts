@@ -35,6 +35,8 @@ export interface Tile {
   doorId?: string;
   /** Set on any walkable tile that holds a hackable console/terminal. */
   consoleId?: string;
+  /** Item def ids lying on the ground here (dropped loot), pickable by any unit standing on the tile. */
+  groundItemIds?: string[];
 }
 
 export interface Grid {
@@ -100,6 +102,11 @@ export function cloneGrid(grid: Grid): Grid {
   return {
     width: grid.width,
     height: grid.height,
-    tiles: grid.tiles.map((tile) => ({ ...tile, coord: { ...tile.coord }, cover: { ...tile.cover } })),
+    tiles: grid.tiles.map((tile) => ({
+      ...tile,
+      coord: { ...tile.coord },
+      cover: { ...tile.cover },
+      groundItemIds: tile.groundItemIds ? [...tile.groundItemIds] : undefined,
+    })),
   };
 }

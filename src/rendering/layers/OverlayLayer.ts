@@ -57,6 +57,15 @@ function drawConsoleIcon(ctx: CanvasRenderingContext2D, camera: Camera, tile: Ti
   ctx.fillRect(x + size - iconSize - 4, y + 4, iconSize, iconSize);
 }
 
+function drawLootIcon(ctx: CanvasRenderingContext2D, camera: Camera, tile: Tile): void {
+  if (!tile.groundItemIds || tile.groundItemIds.length === 0) return;
+  const { x, y } = gridToScreen(camera, tile.coord);
+  const size = camera.tileSize;
+  const iconSize = size * 0.22;
+  ctx.fillStyle = '#ffd23d';
+  ctx.fillRect(x + 4, y + size - iconSize - 4, iconSize, iconSize);
+}
+
 export function drawOverlayLayer(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
@@ -67,6 +76,7 @@ export function drawOverlayLayer(
   for (const tile of grid.tiles) {
     drawCoverIcons(ctx, camera, tile);
     drawConsoleIcon(ctx, camera, tile, state);
+    drawLootIcon(ctx, camera, tile);
   }
 
   for (const unit of Object.values(units)) {

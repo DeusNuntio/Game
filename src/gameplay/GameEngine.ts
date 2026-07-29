@@ -9,6 +9,8 @@ import { resolveAttackAction } from './systems/combat/AttackResolver';
 import { resolveEndTurn } from './systems/turns/TurnManager';
 import { resolveOpenDoor } from './systems/interactables/Door';
 import { resolveHack } from './systems/interactables/Console';
+import { resolveEquip } from './systems/inventory/EquipmentSystem';
+import { resolvePickupItem } from './systems/loot/LootSystem';
 
 /**
  * The single mutation point for GameState. Every consumer (UI, AI, tests) calls
@@ -65,6 +67,10 @@ function applyAction(state: GameState, action: GameAction): { state: GameState; 
       return resolveOpenDoor(state, action);
     case 'hack':
       return resolveHack(state, action);
+    case 'equip':
+      return resolveEquip(state, action);
+    case 'pickupItem':
+      return resolvePickupItem(state, action);
     default: {
       const exhaustive: never = action;
       throw new Error(`Unhandled action type: ${JSON.stringify(exhaustive)}`);

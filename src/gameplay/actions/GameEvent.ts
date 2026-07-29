@@ -65,6 +65,26 @@ export interface ConsoleHackFailedEvent {
   unitId: string;
 }
 
+export interface ItemEquippedEvent {
+  type: 'itemEquipped';
+  unitId: string;
+  itemId: string;
+  slot: 'weapon' | 'armor';
+}
+
+export interface ItemPickedUpEvent {
+  type: 'itemPickedUp';
+  unitId: string;
+  itemId: string;
+}
+
+export interface LootDroppedEvent {
+  type: 'lootDropped';
+  unitId: string;
+  coord: Coord;
+  itemIds: string[];
+}
+
 /**
  * Discriminated union of everything GameEngine can emit. Rendering/audio/UI/save
  * subscribe to these; they never read gameplay internals directly. Grows alongside
@@ -80,4 +100,7 @@ export type GameEvent =
   | UnitDiedEvent
   | DoorToggledEvent
   | ConsoleHackedEvent
-  | ConsoleHackFailedEvent;
+  | ConsoleHackFailedEvent
+  | ItemEquippedEvent
+  | ItemPickedUpEvent
+  | LootDroppedEvent;

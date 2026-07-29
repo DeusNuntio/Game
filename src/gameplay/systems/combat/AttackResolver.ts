@@ -1,3 +1,4 @@
+import { getItemDef } from '@/data/items';
 import { Rng } from '../../../core/Rng';
 import type { GameState } from '../../model/GameState';
 import type { AttackAction } from '../../actions/GameAction';
@@ -12,6 +13,7 @@ import { hasLineOfSight } from './LineOfSight';
 import { getCoverLevel } from './Cover';
 import { isFlanking } from './Flanking';
 import { calculateHitChance } from './HitChance';
+import { dropLoot } from '../loot/LootSystem';
 
 export interface AttackResult {
   hit: boolean;
@@ -25,7 +27,8 @@ export function rollAttack(
   state: GameState,
   attackerAccuracy: number,
   attackerCritChance: number,
-  attackerDamage: number,
+  damageMin: number,
+  damageMax: number,
   attackerCoord: { x: number; y: number },
   defenderCoord: { x: number; y: number },
   rng: Rng,
@@ -39,7 +42,8 @@ export function rollAttack(
     return { hit: false, crit: false, damage: 0, hitChance };
   }
   const crit = rng.chance(attackerCritChance);
-  const damage = crit ? Math.round(attackerDamage * 1.5) : attackerDamage;
+  const baseDamage = damageMin === damageMax ? damageMin : damageMin + rng.nextInt(damageMax - damageMin + 1);
+  const damage = crit ? Math.round(baseDamage * 1.5) : baseDamage;
   return { hit: true, crit, damage, hitChance };
 }
 
@@ -57,25 +61,34 @@ export function resolveAttackAction(state: GameState, action: AttackAction): Sys
   if (!target || !target.alive) {
     return { state, events: [rejected(action, 'target not found or dead')] };
   }
-  if (attacker.stats.ap < 1) {
+
+  const weaponDef = attacker.equipped.weaponId ? getItemDef(attacker.equipped.weaponId) : undefined;
+  const weapon = weaponDef?.kind === 'weapon' ? weaponDef : undefined;
+  const apCost = weapon?.apCost ?? 1;
+
+  if (attacker.stats.ap < apCost) {
     return { state, events: [rejected(action, 'not enough action points')] };
   }
   if (!hasLineOfSight(state.grid, state, attacker.coord, target.coord)) {
     return { state, events: [rejected(action, 'no line of sight to target')] };
   }
 
+  const armorDef = target.equipped.armorId ? getItemDef(target.equipped.armorId) : undefined;
+  const armor = armorDef?.kind === 'armor' ? armorDef : undefined;
+
   const rng = new Rng(state.rngState);
   const result = rollAttack(
     state,
-    attacker.stats.baseAccuracy,
-    attacker.stats.critChance,
-    attacker.stats.baseDamage,
+    attacker.stats.baseAccuracy + (weapon?.accuracyMod ?? 0) - (armor?.defenseMod ?? 0),
+    attacker.stats.critChance + (weapon?.critChanceMod ?? 0),
+    weapon?.damageMin ?? attacker.stats.baseDamage,
+    weapon?.damageMax ?? attacker.stats.baseDamage,
     attacker.coord,
     target.coord,
     rng,
   );
   state.rngState = rng.getState();
-  attacker.stats.ap -= 1;
+  attacker.stats.ap -= apCost;
 
   const events: GameEvent[] = [];
   if (result.hit) {
@@ -102,6 +115,8 @@ export function resolveAttackAction(state: GameState, action: AttackAction): Sys
     if (tile) tile.occupantId = null;
     const diedEvent: UnitDiedEvent = { type: 'unitDied', unitId: target.id };
     events.push(diedEvent);
+    const lootEvent = dropLoot(state, target);
+    if (lootEvent) events.push(lootEvent);
   }
 
   return { state, events };
