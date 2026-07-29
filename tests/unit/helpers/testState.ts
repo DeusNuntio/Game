@@ -13,6 +13,7 @@ export function defaultStats(overrides: Partial<UnitStats> = {}): UnitStats {
     critChance: 0.1,
     hackSkill: 0.5,
     baseDamage: 3,
+    initiative: 5,
     ...overrides,
   };
 }

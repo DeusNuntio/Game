@@ -1,10 +1,12 @@
 import { EventBus } from '../core/EventBus';
 import type { GameState } from './model/GameState';
-import { cloneGameState } from './model/GameState';
+import { cloneGameState, getActiveUnitId } from './model/GameState';
 import type { GameAction } from './actions/GameAction';
-import type { GameEvent } from './actions/GameEvent';
+import { actingUnitId } from './actions/GameAction';
+import type { ActionRejectedEvent, GameEvent } from './actions/GameEvent';
 import { resolveMove } from './systems/movement/MovementSystem';
 import { resolveAttackAction } from './systems/combat/AttackResolver';
+import { resolveEndTurn } from './systems/turns/TurnManager';
 
 /**
  * The single mutation point for GameState. Every consumer (UI, AI, tests) calls
@@ -34,12 +36,29 @@ export class GameEngine {
   }
 }
 
+/** Every action except endTurn (which validates ownership itself) must come from the active unit. */
+function checkTurnOwnership(state: GameState, action: GameAction): ActionRejectedEvent | null {
+  if (action.type === 'endTurn') return null;
+  const active = getActiveUnitId(state);
+  if (active !== undefined && actingUnitId(action) !== active) {
+    return { type: 'actionRejected', action, reason: 'not this unit\'s turn' };
+  }
+  return null;
+}
+
 function applyAction(state: GameState, action: GameAction): { state: GameState; events: GameEvent[] } {
+  const ownershipRejection = checkTurnOwnership(state, action);
+  if (ownershipRejection) {
+    return { state, events: [ownershipRejection] };
+  }
+
   switch (action.type) {
     case 'move':
       return resolveMove(state, action);
     case 'attack':
       return resolveAttackAction(state, action);
+    case 'endTurn':
+      return resolveEndTurn(state, action);
     default: {
       const exhaustive: never = action;
       throw new Error(`Unhandled action type: ${JSON.stringify(exhaustive)}`);

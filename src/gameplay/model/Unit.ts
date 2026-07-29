@@ -16,6 +16,8 @@ export interface UnitStats {
   hackSkill: number;
   /** Placeholder unarmed/base damage; overridden once a weapon is equipped (M9). */
   baseDamage: number;
+  /** Determines turn order each round; higher acts first. */
+  initiative: number;
 }
 
 export interface StatusEffect {
