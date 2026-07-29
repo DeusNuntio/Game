@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dark Horizon — Cyberpunk Tactics</title>
+    <style>
+      html, body { margin: 0; padding: 0; background: #0a0a12; color: #d0d0e0; font-family: monospace; }
+      #app { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      #hud { display: flex; flex-direction: column; gap: 6px; width: 640px; max-width: 90vw; }
+      .ui-panel {
+        background: #12121c;
+        border: 1px solid #2a2a3a;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      .action-menu { display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; }
+      .action-menu button {
+        background: #1c1c2a;
+        color: #d0d0e0;
+        border: 1px solid #3a3a4a;
+        border-radius: 3px;
+        padding: 6px 10px;
+        font-family: monospace;
+        cursor: pointer;
+      }
+      .action-menu button:hover:not(:disabled) { background: #26263a; }
+      .action-menu button.active { border-color: #00ffc8; color: #00ffc8; }
+      .action-menu button:disabled { opacity: 0.4; cursor: not-allowed; }
+      .objective-tracker ul { margin: 4px 0 0; padding-left: 18px; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
