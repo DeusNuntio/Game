@@ -19,7 +19,7 @@ export function resolveEquip(state: GameState, action: EquipItemAction): SystemR
     return { state, events: [rejected(action, 'item not in inventory')] };
   }
   const def = getItemDef(action.itemId);
-  if (!def || def.kind === 'consumable') {
+  if (!def || def.kind === 'consumable' || def.kind === 'questItem') {
     return { state, events: [rejected(action, 'item is not equippable')] };
   }
 

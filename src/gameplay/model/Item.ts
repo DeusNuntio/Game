@@ -25,4 +25,11 @@ export interface ConsumableDef {
   healAmount: number;
 }
 
-export type ItemDef = WeaponDef | ArmorDef | ConsumableDef;
+/** No gameplay stats — keycards, data drives, dossiers, ... used purely by mission objectives/door gates. */
+export interface QuestItemDef {
+  id: string;
+  name: string;
+  kind: 'questItem';
+}
+
+export type ItemDef = WeaponDef | ArmorDef | ConsumableDef | QuestItemDef;

@@ -26,6 +26,11 @@ import { createInitialMetaState } from '@/meta/MetaState';
 
 const MANUAL_SAVE_SLOT = 'manual';
 
+function isEquippableItem(itemId: string): boolean {
+  const kind = getItemDef(itemId)?.kind;
+  return kind === 'weapon' || kind === 'armor';
+}
+
 const AVAILABLE_MISSIONS: MissionListing[] = [
   {
     id: 'mission01',
@@ -192,7 +197,7 @@ function startMission(initialState: GameState): void {
       return;
     }
     if (id === 'equip' && activeUnit) {
-      const itemId = activeUnit.inventory.find((i) => getItemDef(i)?.kind !== 'consumable');
+      const itemId = activeUnit.inventory.find((i) => isEquippableItem(i));
       if (itemId) engine.dispatch({ type: 'equip', unitId: activeUnit.id, itemId });
       refresh();
       return;
@@ -256,7 +261,7 @@ function startMission(initialState: GameState): void {
       ? state.grid.tiles.find((t) => t.coord.x === activeUnit.coord.x && t.coord.y === activeUnit.coord.y)
       : undefined;
     const hasLoot = !!standingTile?.groundItemIds && standingTile.groundItemIds.length > 0;
-    const hasEquippableItem = !!activeUnit?.inventory.some((i) => getItemDef(i)?.kind !== 'consumable');
+    const hasEquippableItem = !!activeUnit?.inventory.some((i) => isEquippableItem(i));
 
     actionMenu.setOptions([
       { id: 'move', label: 'Bewegen', enabled: canAct },

@@ -48,4 +48,14 @@ describe('resolveEquip', () => {
 
     expect(events[0]).toMatchObject({ type: 'actionRejected', reason: 'item is not equippable' });
   });
+
+  it('rejects equipping a quest item', () => {
+    const state = makeTestState({ units: [{ id: 'p1', faction: 'player', x: 0, y: 0 }] });
+    state.units.p1!.inventory = ['keycard_exec'];
+    const engine = new GameEngine(state);
+
+    const events = engine.dispatch({ type: 'equip', unitId: 'p1', itemId: 'keycard_exec' });
+
+    expect(events[0]).toMatchObject({ type: 'actionRejected', reason: 'item is not equippable' });
+  });
 });
