@@ -35,6 +35,8 @@ describe('wireAutosave', () => {
     state.mission = {
       id: 'm',
       name: 'm',
+      briefing: '',
+      alarmActive: true,
       status: 'ongoing',
       objectives: [{ id: 'kill', type: 'eliminateAll', description: '', complete: false }],
     };

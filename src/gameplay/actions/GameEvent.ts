@@ -110,6 +110,17 @@ export interface MissionLostEvent {
   type: 'missionLost';
 }
 
+export interface AlarmTriggeredEvent {
+  type: 'alarmTriggered';
+  reason: 'attack' | 'spotted' | 'hackFailed' | 'puzzleOrderViolated';
+}
+
+export interface PuzzleOrderViolatedEvent {
+  type: 'puzzleOrderViolated';
+  consoleId: string;
+  puzzleGroupId: string;
+}
+
 /**
  * Discriminated union of everything GameEngine can emit. Rendering/audio/UI/save
  * subscribe to these; they never read gameplay internals directly. Grows alongside
@@ -133,4 +144,6 @@ export type GameEvent =
   | LevelUpEvent
   | ObjectiveCompletedEvent
   | MissionWonEvent
-  | MissionLostEvent;
+  | MissionLostEvent
+  | AlarmTriggeredEvent
+  | PuzzleOrderViolatedEvent;

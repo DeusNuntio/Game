@@ -13,6 +13,7 @@ import { resolveEquip } from './systems/inventory/EquipmentSystem';
 import { resolvePickupItem } from './systems/loot/LootSystem';
 import { evaluateObjectives } from './systems/mission/ObjectiveTracker';
 import { evaluateMissionOutcome } from './systems/mission/WinLoseEvaluator';
+import { evaluateAlarm } from './systems/mission/AlarmSystem';
 
 /**
  * The single mutation point for GameState. Every consumer (UI, AI, tests) calls
@@ -46,6 +47,7 @@ export class GameEngine {
   dispatch(action: GameAction): GameEvent[] {
     const working = cloneGameState(this.state);
     const { state: nextState, events } = applyAction(working, action);
+    events.push(...evaluateAlarm(nextState, action, events));
     events.push(...evaluateMission(nextState));
     this.state = nextState;
     this.events.emitAll(events);

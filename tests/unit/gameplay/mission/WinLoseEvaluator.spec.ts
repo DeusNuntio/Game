@@ -16,7 +16,7 @@ describe('evaluateMissionOutcome', () => {
   it('is ongoing while players are alive and no objective is complete', () => {
     const state = withMission(
       makeTestState({ units: [{ id: 'p1', faction: 'player', x: 0, y: 0 }] }),
-      { id: 'm1', name: 't', status: 'ongoing', objectives: [] },
+      { id: 'm1', name: 't', briefing: '', status: 'ongoing', alarmActive: false, objectives: [] },
     );
     expect(evaluateMissionOutcome(state)).toBe('ongoing');
   });
@@ -24,7 +24,7 @@ describe('evaluateMissionOutcome', () => {
   it('is lost once no player units are alive', () => {
     const state = withMission(
       makeTestState({ units: [{ id: 'p1', faction: 'player', x: 0, y: 0 }] }),
-      { id: 'm1', name: 't', status: 'ongoing', objectives: [] },
+      { id: 'm1', name: 't', briefing: '', status: 'ongoing', alarmActive: false, objectives: [] },
     );
     state.units.p1!.alive = false;
     expect(evaluateMissionOutcome(state)).toBe('lost');
@@ -36,7 +36,9 @@ describe('evaluateMissionOutcome', () => {
       {
         id: 'm1',
         name: 't',
+        briefing: '',
         status: 'ongoing',
+        alarmActive: false,
         objectives: [{ id: 'o1', type: 'eliminateAll', description: '', complete: true }],
       },
     );

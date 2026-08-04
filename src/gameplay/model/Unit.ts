@@ -43,6 +43,8 @@ export interface Unit {
   statusEffects: StatusEffect[];
   aiProfileId?: string;
   alive: boolean;
+  /** Waypoint loop for unaware enemies (see ai/behaviors/Patrol.ts) — ignored once the mission alarm triggers. */
+  patrolRoute?: Coord[];
 }
 
 export function createUnit(params: {
@@ -52,6 +54,7 @@ export function createUnit(params: {
   coord: Coord;
   stats: UnitStats;
   aiProfileId?: string;
+  patrolRoute?: Coord[];
 }): Unit {
   return {
     id: params.id,
@@ -66,6 +69,7 @@ export function createUnit(params: {
     statusEffects: [],
     aiProfileId: params.aiProfileId,
     alive: true,
+    patrolRoute: params.patrolRoute,
   };
 }
 
@@ -77,5 +81,6 @@ export function cloneUnit(unit: Unit): Unit {
     equipped: { ...unit.equipped },
     inventory: [...unit.inventory],
     statusEffects: unit.statusEffects.map((s) => ({ ...s })),
+    patrolRoute: unit.patrolRoute?.map((c) => ({ ...c })),
   };
 }

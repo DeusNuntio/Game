@@ -32,9 +32,12 @@ export function resolveOpenDoor(state: GameState, action: OpenDoorAction): Syste
   if (current?.open) {
     return { state, events: [rejected(action, 'door already open')] };
   }
+  if (current?.requiresItemId && !unit.inventory.includes(current.requiresItemId)) {
+    return { state, events: [rejected(action, 'requires keycard')] };
+  }
 
   state.doors ??= {};
-  state.doors[action.doorId] = { open: true };
+  state.doors[action.doorId] = { ...current, open: true };
   unit.stats.ap -= 1;
 
   const event: DoorToggledEvent = { type: 'doorToggled', doorId: action.doorId, open: true };

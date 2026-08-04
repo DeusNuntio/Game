@@ -13,12 +13,20 @@ export interface TurnState {
 
 export interface DoorState {
   open: boolean;
+  /** If set, OpenDoorAction requires this item in the acting unit's inventory (a keycard puzzle alternative to hacking). */
+  requiresItemId?: string;
 }
 
 export interface ConsoleState {
   hacked: boolean;
   /** [0,1]; higher is harder. Offsets the hacking unit's hackSkill in the skill check. */
   difficulty: number;
+  /** Successfully hacking this console also opens the given door remotely. */
+  linkedDoorId?: string;
+  /** If set, this console is one step of an ordered puzzle (see puzzleGroupId/sequenceIndex). */
+  puzzleGroupId?: string;
+  /** Position within its puzzleGroupId, starting at 0. Hacking out of order still succeeds/fails on the skill check but always raises the alarm. */
+  sequenceIndex?: number;
 }
 
 export interface GameState {

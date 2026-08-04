@@ -105,6 +105,10 @@ export function createMission01(): GameState {
       initiative: 5,
     },
     aiProfileId: 'utility',
+    patrolRoute: [
+      { x: 7, y: 2 },
+      { x: 6, y: 2 },
+    ],
   });
   guard1.equipped.weaponId = 'pistol_mk1';
 
@@ -126,6 +130,10 @@ export function createMission01(): GameState {
       initiative: 4,
     },
     aiProfileId: 'utility',
+    patrolRoute: [
+      { x: 7, y: 4 },
+      { x: 6, y: 4 },
+    ],
   });
   guard2.equipped.weaponId = 'pistol_mk1';
 
@@ -159,6 +167,8 @@ export function createMission01(): GameState {
   const mission: Mission = {
     id: 'mission01',
     name: 'Serverraum-Infiltration',
+    briefing:
+      'Ein Konzern-Serverraum lagert brisante Daten. Die Wachen patrouillieren unwissend — bleibt ihnen aus der Sichtlinie, hackt die Sicherheitskonsole und verschwindet, oder eröffnet das Feuer, wenn es sein muss.',
     objectives: [
       {
         id: 'eliminate_guards',
@@ -175,6 +185,7 @@ export function createMission01(): GameState {
       },
     ],
     status: 'ongoing',
+    alarmActive: false,
   };
 
   const state: GameState = {

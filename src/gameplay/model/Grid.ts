@@ -37,6 +37,8 @@ export interface Tile {
   consoleId?: string;
   /** Item def ids lying on the ground here (dropped loot), pickable by any unit standing on the tile. */
   groundItemIds?: string[];
+  /** Set on any walkable tile that counts toward a reachExtraction objective sharing this id. */
+  extractionZoneId?: string;
 }
 
 export interface Grid {

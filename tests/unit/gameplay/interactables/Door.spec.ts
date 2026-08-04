@@ -63,4 +63,26 @@ describe('resolveOpenDoor', () => {
     events = engine.dispatch({ type: 'move', unitId: 'p1', to: { x: 3, y: 0 } });
     expect(events[0]).toMatchObject({ type: 'unitMoved' });
   });
+
+  it('rejects opening a keycard-locked door without the item', () => {
+    const state = withDoor(makeTestState({ units: [{ id: 'p1', faction: 'player', x: 1, y: 0 }] }));
+    state.doors!.d1!.requiresItemId = 'keycard_alpha';
+    const engine = new GameEngine(state);
+
+    const events = engine.dispatch({ type: 'openDoor', unitId: 'p1', doorId: 'd1' });
+
+    expect(events[0]).toMatchObject({ type: 'actionRejected', reason: 'requires keycard' });
+    expect(engine.getState().doors?.d1?.open).toBe(false);
+  });
+
+  it('opens a keycard-locked door once the unit carries the item', () => {
+    const state = withDoor(makeTestState({ units: [{ id: 'p1', faction: 'player', x: 1, y: 0 }] }));
+    state.doors!.d1!.requiresItemId = 'keycard_alpha';
+    state.units.p1!.inventory.push('keycard_alpha');
+    const engine = new GameEngine(state);
+
+    const events = engine.dispatch({ type: 'openDoor', unitId: 'p1', doorId: 'd1' });
+
+    expect(events[0]).toMatchObject({ type: 'doorToggled', open: true });
+  });
 });

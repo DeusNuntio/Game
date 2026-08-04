@@ -15,11 +15,14 @@ export class TurnIndicator {
   update(state: GameState): void {
     const activeId = getActiveUnitId(state);
     const unit = activeId ? state.units[activeId] : undefined;
+    const alarmSuffix = state.mission ? (state.mission.alarmActive ? ' — ALARM AUSGELÖST' : ' — unentdeckt') : '';
+
     if (!unit) {
-      this.el.textContent = `Runde ${state.turn.round}`;
+      this.el.textContent = `Runde ${state.turn.round}${alarmSuffix}`;
       return;
     }
     const label = FACTION_LABEL[unit.faction] ?? unit.faction;
-    this.el.textContent = `Runde ${state.turn.round} — Am Zug: ${unit.name} (${label}) — AP ${unit.stats.ap}/${unit.stats.maxAp}`;
+    this.el.textContent = `Runde ${state.turn.round} — Am Zug: ${unit.name} (${label}) — AP ${unit.stats.ap}/${unit.stats.maxAp}${alarmSuffix}`;
+    this.el.style.color = state.mission?.alarmActive ? '#ff4d4d' : '';
   }
 }

@@ -121,6 +121,13 @@ function startMission(initialState: GameState): void {
 
   const camera = createIsoCamera(initialState.grid.width, initialState.grid.height);
 
+  if (initialState.mission?.briefing) {
+    const briefing = document.createElement('p');
+    briefing.className = 'mission-briefing';
+    briefing.textContent = initialState.mission.briefing;
+    gameRoot.appendChild(briefing);
+  }
+
   const canvas = document.createElement('canvas');
   canvas.id = 'game-canvas';
   canvas.width = camera.canvasWidth;

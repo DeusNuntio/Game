@@ -9,7 +9,9 @@ function twoObjectiveMission(): Mission {
   return {
     id: 'test_mission',
     name: 'Test Mission',
+    briefing: '',
     status: 'ongoing',
+    alarmActive: true, // tests dispatch attacks directly; keep AI/patrol semantics out of scope here
     objectives: [
       { id: 'eliminate_guards', type: 'eliminateAll', description: '', complete: false },
       { id: 'hack_security', type: 'hackConsole', description: '', consoleId: 'c1', complete: false },
