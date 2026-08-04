@@ -12,7 +12,7 @@ import { ObjectiveTracker } from '@/ui/components/ObjectiveTracker';
 import { UtilityAI } from '@/ai/UtilityAI';
 import { runEnemyTurn } from '@/ai/AiController';
 import { getItemDef } from '@/data/items';
-import { createMission01 } from '@/data/missions/mission01';
+import { MISSION_REGISTRY, findMission } from '@/data/missions/registry';
 import { SaveManager } from '@/save/SaveManager';
 import { LocalStorageAdapter } from '@/save/LocalStorageAdapter';
 import { wireAutosave, AUTOSAVE_SLOT } from '@/save/Autosave';
@@ -31,13 +31,11 @@ function isEquippableItem(itemId: string): boolean {
   return kind === 'weapon' || kind === 'armor';
 }
 
-const AVAILABLE_MISSIONS: MissionListing[] = [
-  {
-    id: 'mission01',
-    name: 'Serverraum-Infiltration',
-    description: 'Alle Wachen ausschalten ODER die Sicherheitskonsole hacken.',
-  },
-];
+const AVAILABLE_MISSIONS: MissionListing[] = MISSION_REGISTRY.map(({ id, name, description }) => ({
+  id,
+  name,
+  description,
+}));
 
 const app = document.getElementById('app');
 if (!app) {
@@ -92,7 +90,8 @@ function showWorldMap(): void {
     new MetaMapScreenStub(
       metaState,
       (missionId) => {
-        if (missionId === 'mission01') startMission(createMission01());
+        const mission = findMission(missionId);
+        if (mission) startMission(mission.create());
       },
       showMainMenu,
     ),
@@ -104,7 +103,8 @@ function showMissionSelect(): void {
     new MissionSelect(
       AVAILABLE_MISSIONS,
       (missionId) => {
-        if (missionId === 'mission01') startMission(createMission01());
+        const mission = findMission(missionId);
+        if (mission) startMission(mission.create());
       },
       showMainMenu,
     ),
